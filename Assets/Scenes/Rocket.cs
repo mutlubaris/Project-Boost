@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Rocket : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class Rocket : MonoBehaviour
     [SerializeField] float mainThrust = 50f;
     Rigidbody rigidBody;
     AudioSource audioSource;
+    enum State {Alive, Dying, Transcending}
+    State state = State.Alive;
     
     // Start is called before the first frame update
     void Start()
@@ -20,21 +23,43 @@ public class Rocket : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Thrust();
-        Rotate();
+        if (state == State.Alive)
+        {
+            Thrust();
+            Rotate();
+        }
     }
 
     void OnCollisionEnter(Collision collision)
     {
+        if (state != State.Alive)
+        {
+            return;
+        }
         switch (collision.gameObject.tag)
         {
             case "Friendly":
                 print ("OK");
                 break;
+            case "Finish":
+                state = State.Transcending;
+                Invoke("LoadNextScene", 1f);
+                break;
             default:
-                print("Dead");
+                state = State.Dying;
+                Invoke("LoadFirstScene", 1f);
                 break;
         }
+    }
+
+    private void LoadFirstScene()
+    {
+        SceneManager.LoadScene(0);
+    }
+
+    private void LoadNextScene()
+    {
+        SceneManager.LoadScene(1);
     }
 
     private void Thrust()
